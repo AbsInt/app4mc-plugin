@@ -1,4 +1,4 @@
-package app4mc_plugin;
+package com.absint.app4mc_plugin;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;

@@ -1,10 +1,12 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: APP4MC-plugin
-Bundle-SymbolicName: APP4MC-plugin
+Bundle-SymbolicName: com.absint.APP4MC-plugin
 Bundle-Version: 1.0.0.qualifier
-Bundle-Activator: app4mc_plugin.Activator
+Bundle-Activator: com.absint.app4mc_plugin.Activator
 Require-Bundle: org.eclipse.ui,
- org.eclipse.core.runtime
+ org.eclipse.core.runtime,
+ org.eclipse.app4mc.amalthea.workflow.core;bundle-version="0.8.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
+Export-Package: com.absint.app4mc_plugin
