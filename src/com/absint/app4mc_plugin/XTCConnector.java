@@ -10,31 +10,19 @@ import java.util.HashMap;
 import java.util.Set;
 
 import org.eclipse.app4mc.amalthea.model.util.*;
-import org.eclipse.app4mc.amalthea.model.UniformDistribution;
 import org.eclipse.app4mc.amalthea.model.InstructionsConstant;
-import org.eclipse.app4mc.amalthea.model.InstructionsDeviation;
 import org.eclipse.app4mc.amalthea.model.Runnable;
 import org.eclipse.app4mc.amalthea.model.RunnableItem;
 import org.eclipse.app4mc.amalthea.model.SWModel;
 import org.eclipse.app4mc.amalthea.model.Task;
 import org.eclipse.app4mc.amalthea.model.RunnableInstructions;
-import org.eclipse.app4mc.amalthea.model.Value;
 
 import org.eclipse.app4mc.amalthea.workflow.core.Context;
 import org.eclipse.app4mc.amalthea.workflow.core.WorkflowComponent;
 import org.eclipse.app4mc.amalthea.workflow.core.exception.WorkflowException;
 
-import org.eclipse.emf.common.notify.Adapter;
-import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.common.util.EMap;
-import org.eclipse.emf.common.util.TreeIterator;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EOperation;
-import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.ecore.resource.Resource;
+
 
 // XMLMemento for writing XML files
 import org.eclipse.ui.IMemento;
@@ -76,6 +64,8 @@ public class XTCConnector extends WorkflowComponent {
 	private String startDateTime;
 	private String stopDateTime;
 	
+	private String mode = "Tasks"; // FIXME
+	
 	@Override
 	protected void runInternal(Context ctx) throws WorkflowException {
 		this.log.info("runInternal: ");
@@ -95,8 +85,11 @@ public class XTCConnector extends WorkflowComponent {
 			startDateTime = new Date().toString();
 			
 			// write XTC file
-			//writeXTCForRunnables();
-			writeXTCForTasks();
+			if (mode == "Runnables") {
+				writeXTCForRunnables();
+			} else {
+				writeXTCForTasks();
+			}
 			
 			// call alauncher to process the XTC file
 			processXTC();
@@ -105,6 +98,8 @@ public class XTCConnector extends WorkflowComponent {
 			retrieveTimingData();
 		} catch (IOException e) {
 			throw new WorkflowException("IOException: " + e.getMessage());
+		} catch (InterruptedException e) {
+			throw new WorkflowException("InterruptedException: " + e.getMessage());
 		} catch (WorkbenchException e) {
 			throw new WorkflowException("WorkbenchException: " + e.getMessage());
 		} finally {
@@ -240,16 +235,15 @@ public class XTCConnector extends WorkflowComponent {
 
 		for (int i = 0; i < tasks.size(); i++) {
 			Task task = tasks.get(i);
-			
-			// generate unique identifiers
-			int id = 0;
-			
+
 			writeTaskAisFile(task);
 			
 			writeRequestForTask(cpu, 0, task, i);
 			/*
 			Set<Runnable> runnablesOfTask = SoftwareUtil.getRunnableSet(task, null);
-			
+						
+			// generate unique identifiers
+			int id = 0;
 			for (Runnable runnable : runnablesOfTask) {
 				writeRequestForRunnable(runnable, cpu, ++id, task, i);
 			}
@@ -457,18 +451,12 @@ public class XTCConnector extends WorkflowComponent {
 		alauchnerOptions = options;
 	}
 	
-	protected void processXTC() throws IOException {
+	protected void processXTC() throws IOException, InterruptedException {
 		
 		System.out.println("Calling TimingProfiler...");
 	
 		Process p = java.lang.Runtime.getRuntime().exec(ALAUNCHER_COMMAND + " " + alauchnerOptions + " " + xtcLocation);
-		try {
-			p.waitFor();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		p.waitFor();
 	}
 
 
