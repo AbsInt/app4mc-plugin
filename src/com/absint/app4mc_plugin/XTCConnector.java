@@ -164,17 +164,26 @@ public class XTCConnector extends WorkflowComponent {
 	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.4";	
 	private static final String MODEL_NAME = "Democar"; //FIXME
 
-	
 	// XTC specific stuff
-	// FIXME: replace this with model information
 	private static final String XTC_CPU_NAME = "Generic Multicore CPU";
-	private static final String XTC_REQUEST_MODE = "batch";
-	private static final String XTC_REQUEST_TYPE = "TimingProfiler";
-	private static final String XTC_REQUEST_OPTION_CPU = "tricore";
-	private static final String XTC_REQUEST_OPTION_TARGET = "tc277";
-	//private static final String XTC_REQUEST_OPTION_CPU = "arm";
-	//private static final String XTC_REQUEST_OPTION_TARGET = "Profiler-R";
-
+	private String xtcRequestMode = "batch";
+	private String xtcRequestType = "TimingProfiler";
+	private String xtcRequestOptionCpu = "tricore";
+	private String xtcRequestOptionTarget = "tc277";
+	
+	public void setXtcRequestMode (String mode) {
+		xtcRequestMode = mode;
+	}
+	
+	public void setXtcRequestType (String type) {
+		xtcRequestType = type;
+	}
+	
+	public void setXtcRequestTarget (String cpu, String target) {
+		xtcRequestOptionCpu = cpu;
+		xtcRequestOptionTarget = target;
+	}
+	
 	private void writeXTCForRunnables() throws WorkflowException, IOException {
 		this.log.info("writeXTC: ");
 
@@ -305,13 +314,13 @@ public class XTCConnector extends WorkflowComponent {
 		// create <request> tag
 		// set analysis mode and analysis type
 		IMemento request = mode.createChild("request");
-		request.putString("mode", XTC_REQUEST_MODE);
-		request.putString("type", XTC_REQUEST_TYPE);
+		request.putString("mode", xtcRequestMode);
+		request.putString("type", xtcRequestType);
 		request.putString("vendor", VENDOR_STRING);
 
 		// set various options
-		writeXtcOptionElement(request, "a3:target", XTC_REQUEST_OPTION_CPU);
-		writeXtcOptionElement(request, "a3:target", XTC_REQUEST_OPTION_TARGET);
+		writeXtcOptionElement(request, "a3:cpu", xtcRequestOptionCpu);
+		writeXtcOptionElement(request, "a3:target", xtcRequestOptionTarget);
 		if (task == null) {
 		    writeXtcOptionElement(request, "a3:global_ais_file", aisLocation);
 		} else {
@@ -344,17 +353,16 @@ public class XTCConnector extends WorkflowComponent {
 		// create <request> tag
 		// set analysis mode and analysis type
 		IMemento request = mode.createChild("request");
-		request.putString("mode", XTC_REQUEST_MODE);
-		request.putString("type", XTC_REQUEST_TYPE);
+		request.putString("mode", xtcRequestMode);
+		request.putString("type", xtcRequestType);
 		request.putString("vendor", VENDOR_STRING);
 
 		// set various options
-		writeXtcOptionElement(request, "a3:target", XTC_REQUEST_OPTION_CPU);
-		writeXtcOptionElement(request, "a3:target", XTC_REQUEST_OPTION_TARGET);
-		if (task == null) {
-		    writeXtcOptionElement(request, "a3:global_ais_file", aisLocation); //FIXME: we want both ais files
-		} else {
-			writeXtcOptionElement(request, "a3:global_ais_file", taskPrefix + task.getName() + ".ais");
+		writeXtcOptionElement(request, "a3:cpu", xtcRequestOptionCpu);
+		writeXtcOptionElement(request, "a3:target", xtcRequestOptionTarget);
+		writeXtcOptionElement(request, "a3:global_ais_file", aisLocation);
+		if (task != null) {
+			writeXtcOptionElement(request, "a3:ais_file", taskPrefix + task.getName() + ".ais");
 		}
 		writeXtcOptionElement(request, "a3:xml_report_file", xmlReportLocation);
 		writeXtcOptionElement(request, "a3:xml_result_file", xmlResultLocation);
@@ -442,13 +450,18 @@ public class XTCConnector extends WorkflowComponent {
 		}
 	}
 
-	private static final String ALAUNCHER_COMMAND = "alauncher.exe -g -j -1";
+	private static final String ALAUNCHER_COMMAND = "alauncher.exe";
+	private String alauchnerOptions = "-g -j -1";
 
+	public void setAlauchnerOptions(String options) {
+		alauchnerOptions = options;
+	}
+	
 	protected void processXTC() throws IOException {
 		
 		System.out.println("Calling TimingProfiler...");
 	
-		Process p = java.lang.Runtime.getRuntime().exec(ALAUNCHER_COMMAND + " " + xtcLocation);
+		Process p = java.lang.Runtime.getRuntime().exec(ALAUNCHER_COMMAND + " " + alauchnerOptions + " " + xtcLocation);
 		try {
 			p.waitFor();
 		} catch (InterruptedException e) {
