@@ -64,7 +64,7 @@ public class XTCConnector extends WorkflowComponent {
 	private String startDateTime;
 	private String stopDateTime;
 	
-	private String mode = "Tasks"; // FIXME
+	private String mode = "Runnables"; // FIXME
 	
 	@Override
 	protected void runInternal(Context ctx) throws WorkflowException {
@@ -445,7 +445,7 @@ public class XTCConnector extends WorkflowComponent {
 	}
 
 	private static final String ALAUNCHER_COMMAND = "alauncher.exe";
-	private String alauchnerOptions = "-g -j -1";
+	private String alauchnerOptions = " -j -1";
 
 	public void setAlauchnerOptions(String options) {
 		alauchnerOptions = options;

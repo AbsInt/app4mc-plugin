@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: APP4MC-plugin
+Bundle-Name: APP4MC-XTC-connector
 Bundle-SymbolicName: com.absint.APP4MC-plugin
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.absint.app4mc_plugin.Activator
