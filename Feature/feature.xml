@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="AMALTHEA_XTC_Connector"
+      label="AMALTHEA_XTC_Connector"
+      version="1.0.0.qualifier">
+
+   <description url="https://srv.aramis2.de/redmine/projects/tools/wiki/AMALTHEA_XTC">
+      This feature allows to generate automatically XTC files from
+AMALTHEA models.
+   </description>
+
+   <copyright>
+      Copyright (c) 2018 AbsInt Angewandte Informatik GmbH and others.
+   </copyright>
+
+   <license url="">
+      Licensed under the ARAMiS II grant agreement.
+   </license>
+
+   <plugin
+         id="com.absint.APP4MC-plugin"
+         download-size="0"
+         install-size="0"
+         version="1.0.0.qualifier"
+         unpack="false"/>
+
+</feature>
