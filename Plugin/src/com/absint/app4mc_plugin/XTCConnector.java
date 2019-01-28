@@ -7,6 +7,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.app4mc.amalthea.model.util.*;
@@ -155,7 +157,18 @@ public class XTCConnector extends WorkflowComponent {
 	public void setXmlResultLocation (String location) {
 		xmlResultLocation = location;
 	}
-
+	
+	private Set<String> ignoredRunnables = new HashSet<String>();
+	private Map<String, String> mappedRunnables = new HashMap<String, String>();
+	
+	public void ignoreRunnable (String runnableName) {
+		ignoredRunnables.add(runnableName);
+	}
+	
+	public void mapRunnable (String sourceRunnableName, String targetRunnableName) {
+		mappedRunnables.put(sourceRunnableName, targetRunnableName);
+	}
+	
 	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.4";	
 	private static final String MODEL_NAME = "Democar"; //FIXME
 
@@ -289,6 +302,13 @@ public class XTCConnector extends WorkflowComponent {
 
 		String name = runnablePrefix + runnable.getName();
 		
+		// ignore some runnables
+		if (ignoredRunnables.contains(name))
+			return;
+		
+		// rename some runnables
+		name = mappedRunnables.getOrDefault(name, name);
+		
 		// create <executable> tag
 		// set entry and analysis id
 		IMemento executable = cpu.createChild("executable");
@@ -320,7 +340,9 @@ public class XTCConnector extends WorkflowComponent {
 		} else {
 			writeXtcOptionElement(request, "a3:global_ais_file", task.getName() + ".ais");
 		}
-		writeXtcOptionElement(request, "a3:xml_report_file", xmlReportLocation);
+		if (xmlReportLocation != null) {
+			writeXtcOptionElement(request, "a3:xml_report_file", xmlReportLocation);
+		}
 	}
 	
 	private void writeRequestForTask(IMemento cpu, int runnableId, Task task, int taskId) throws WorkflowException {
@@ -373,6 +395,10 @@ public class XTCConnector extends WorkflowComponent {
 		
 		String name = runnablePrefix + runnable.getName();
 
+		// ignore some runnables
+		if (ignoredRunnables.contains(name))
+			return;
+		
 		System.out.println("updateRunnable:" + name);
 		
 		EList<RunnableItem> runnableItems = runnable.getRunnableItems();
@@ -437,7 +463,17 @@ public class XTCConnector extends WorkflowComponent {
 		// write timing information for each runnable to model
 		for (int i = 0; i < runnables.size(); i++) {
 			Runnable runnable = runnables.get(i);
-			String result = map.get(runnable.getName());
+			
+			String name = runnablePrefix + runnable.getName();
+			
+			// ignore some runnables
+			if (ignoredRunnables.contains(name))
+				continue;
+			
+			// rename some runnables
+			name = mappedRunnables.getOrDefault(name, name);
+						
+			String result = map.get(name);
 			if (result != null) {
 			   	updateRunnable(runnable, Long.parseLong(result));
 			}
