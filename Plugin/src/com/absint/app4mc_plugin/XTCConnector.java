@@ -169,9 +169,14 @@ public class XTCConnector extends WorkflowComponent {
 		mappedRunnables.put(sourceRunnableName, targetRunnableName);
 	}
 	
-	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.4";	
-	private static final String MODEL_NAME = "Democar"; //FIXME
+	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.5";
+	
+	private String modelName;
 
+	public void setModelName (String name) {
+		modelName = name;
+	}
+	
 	// XTC specific stuff
 	private static final String XTC_CPU_NAME = "Generic Multicore CPU";
 	private String xtcRequestMode = "batch";
@@ -309,40 +314,12 @@ public class XTCConnector extends WorkflowComponent {
 		// rename some runnables
 		name = mappedRunnables.getOrDefault(name, name);
 		
-		// create <executable> tag
-		// set entry and analysis id
-		IMemento executable = cpu.createChild("executable");
-		executable.putString("start", name);
-		executable.putString("name", name);
-		executable.putString("type", "runnable");
-		executable.putString("id", "EXEC_ID_" + taskId + "_" + runnableId);
-
-		// create <mode> tag
-		IMemento mode = executable.createChild("mode");
-		mode.putString("id", "MODE_ID_" + taskId + "_" + runnableId);
-
-		// create <description> tag
-		IMemento description = mode.createChild("description");
-		description.putTextData("AMALTHEA Model '" + MODEL_NAME + "' - Runnable '" + name + "'");
-
-		// create <request> tag
-		// set analysis mode and analysis type
-		IMemento request = mode.createChild("request");
-		request.putString("mode", xtcRequestMode);
-		request.putString("type", xtcRequestType);
-		request.putString("vendor", VENDOR_STRING);
-
-		// set various options
-		writeXtcOptionElement(request, "a3:cpu", xtcRequestOptionCpu);
-		writeXtcOptionElement(request, "a3:target", xtcRequestOptionTarget);
-		if (task == null) {
-		    writeXtcOptionElement(request, "a3:global_ais_file", aisLocation);
-		} else {
-			writeXtcOptionElement(request, "a3:global_ais_file", task.getName() + ".ais");
+		String localAisFile = null;
+		if (task != null) {
+			localAisFile = task.getName() + ".ais";
 		}
-		if (xmlReportLocation != null) {
-			writeXtcOptionElement(request, "a3:xml_report_file", xmlReportLocation);
-		}
+		
+		writeRequest(name, "Task", localAisFile, cpu, runnableId, taskId);
 	}
 	
 	private void writeRequestForTask(IMemento cpu, int runnableId, Task task, int taskId) throws WorkflowException {
@@ -350,11 +327,18 @@ public class XTCConnector extends WorkflowComponent {
 
 		String name = taskPrefix + task.getName();
 		
+		writeRequest(name, "Task", name + ".ais", cpu, runnableId, taskId);
+	}
+
+	
+	private void writeRequest(String analysisEntry, String entryType, String localAisFile, IMemento cpu, int runnableId, int taskId) throws WorkflowException {
+		this.log.info("writeRequest: ");
+
 		// create <executable> tag
 		// set entry and analysis id
 		IMemento executable = cpu.createChild("executable");
-		executable.putString("start", name);
-		executable.putString("name", name);
+		executable.putString("start", analysisEntry);
+		executable.putString("name", analysisEntry);
 		executable.putString("type", "runnable");
 		executable.putString("id", "EXEC_ID_" + taskId + "_" + runnableId);
 
@@ -364,7 +348,7 @@ public class XTCConnector extends WorkflowComponent {
 
 		// create <description> tag
 		IMemento description = mode.createChild("description");
-		description.putTextData("AMALTHEA Model '" + MODEL_NAME + "' - Task '" + name + "'");
+		description.putTextData("AMALTHEA Model '" + modelName + "' - " + entryType + " '" + analysisEntry + "'");
 
 		// create <request> tag
 		// set analysis mode and analysis type
@@ -377,17 +361,17 @@ public class XTCConnector extends WorkflowComponent {
 		writeXtcOptionElement(request, "a3:cpu", xtcRequestOptionCpu);
 		writeXtcOptionElement(request, "a3:target", xtcRequestOptionTarget);
 		writeXtcOptionElement(request, "a3:global_ais_file", aisLocation);
-		if (task != null) {
-			writeXtcOptionElement(request, "a3:ais_file", taskPrefix + task.getName() + ".ais");
-		}
+		writeXtcOptionElement(request, "a3:ais_file", localAisFile);
 		writeXtcOptionElement(request, "a3:xml_report_file", xmlReportLocation);
 		writeXtcOptionElement(request, "a3:xml_result_file", xmlResultLocation);
 	}
-	
+		
 	private void writeXtcOptionElement (IMemento request, String key, String value) {
-		IMemento option_cpu = request.createChild("option");
-		option_cpu.putString("name", key);
-		option_cpu.putString("value", value);
+		if (key != null && value != null) {
+			IMemento option_cpu = request.createChild("option");
+			option_cpu.putString("name", key);
+			option_cpu.putString("value", value);
+		}
 	}
 	
 	private void updateRunnable(Runnable runnable, long max) {
@@ -487,7 +471,7 @@ public class XTCConnector extends WorkflowComponent {
 		alauchnerOptions = options;
 	}
 	
-	protected void processXTC() throws IOException, InterruptedException {
+	private void processXTC() throws IOException, InterruptedException {
 		
 		System.out.println("Calling TimingProfiler...");
 	
