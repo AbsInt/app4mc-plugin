@@ -87,12 +87,8 @@ public class XTCConnector extends WorkflowComponent {
 			startDateTime = new Date().toString();
 			
 			// write XTC file
-			if (mode == "Runnables") {
-				writeXTCForRunnables();
-			} else {
-				writeXTCForTasks();
-			}
-			
+			writeXTC(mode);
+						
 			// call alauncher to process the XTC file
 			processXTC();
 			
@@ -197,16 +193,14 @@ public class XTCConnector extends WorkflowComponent {
 		xtcRequestOptionTarget = target;
 	}
 	
-	private void writeXTCForRunnables() throws WorkflowException, IOException {
-		this.log.info("writeXTC: ");
-
+	private void writeXTC(String mode) throws WorkflowException, IOException {
 		this.log.info("Writing XTC file...");
 
 		// create <xtc> tag
 		XMLMemento xtc = XMLMemento.createWriteRoot("xtc");
 		xtc.putString("xmlns", "http://www.all-times.org/xtc");
-		xtc.putString("schemaLocation", "http://www.absint.com/xtc xtc-v2.4.xsd");
-		xtc.putString("version", "2.4");
+		xtc.putString("schemaLocation", "http://www.absint.com/xtc xtc-v2.6.xsd");
+		xtc.putString("version", "2.6");
 
 		// create <common> tag
 		IMemento common = xtc.createChild("common");
@@ -219,56 +213,31 @@ public class XTCConnector extends WorkflowComponent {
 		// set .elf file
 		cpu.putString("file", elfLocation);
 
-		
-		for (int i = 0; i < runnables.size(); i++) {
-        	writeRequestForRunnable(runnables.get(i), cpu, i, null, 0);
+		// do stuff either for Runnables or Tasks
+		if (mode == "Runnables") {
+			for (int i = 0; i < runnables.size(); i++) {
+	        	writeRequestForRunnable(runnables.get(i), cpu, i, null, 0);
+			}
+		} else {
+			for (int i = 0; i < tasks.size(); i++) {
+				Task task = tasks.get(i);
+
+				writeTaskAisFile(task);
+				
+				writeRequestForTask(cpu, 0, task, i);
+				/*
+				Set<Runnable> runnablesOfTask = SoftwareUtil.getRunnableSet(task, null);
+							
+				// generate unique identifiers
+				int id = 0;
+				for (Runnable runnable : runnablesOfTask) {
+					writeRequestForRunnable(runnable, cpu, ++id, task, i);
+				}
+				*/
+			}
 		}
 
 		xtc.save(new java.io.FileWriter(xtcLocation));
-
-		this.log.info("Finished writing '" + xtcLocation + "'.");
-		
-	}
-
-	private void writeXTCForTasks() throws WorkflowException, IOException {
-		this.log.info("writeXTC: ");
-
-		this.log.info("Writing XTC file...");
-		// create <xtc> tag
-		XMLMemento xtc = XMLMemento.createWriteRoot("xtc");
-		xtc.putString("xmlns", "http://www.all-times.org/xtc");
-		xtc.putString("schemaLocation", "http://www.absint.com/xtc xtc-v2.4.xsd");
-		xtc.putString("version", "2.4");
-
-		// create <common> tag
-		IMemento common = xtc.createChild("common");
-
-		// create <CPU> tag
-		IMemento cpu = common.createChild("CPU");
-		cpu.putString("name", XTC_CPU_NAME);
-		cpu.putString("id", "CPU_ID_0");
-
-		// set .elf file
-		cpu.putString("file", elfLocation);
-
-		for (int i = 0; i < tasks.size(); i++) {
-			Task task = tasks.get(i);
-
-			writeTaskAisFile(task);
-			
-			writeRequestForTask(cpu, 0, task, i);
-			/*
-			Set<Runnable> runnablesOfTask = SoftwareUtil.getRunnableSet(task, null);
-						
-			// generate unique identifiers
-			int id = 0;
-			for (Runnable runnable : runnablesOfTask) {
-				writeRequestForRunnable(runnable, cpu, ++id, task, i);
-			}
-			*/
-		}
-
-		xtc.save(new FileWriter(xtcLocation));
 
 		this.log.info("Finished writing '" + xtcLocation + "'.");
 	}
@@ -330,7 +299,6 @@ public class XTCConnector extends WorkflowComponent {
 		writeRequest(name, "Task", name + ".ais", cpu, runnableId, taskId);
 	}
 
-	
 	private void writeRequest(String analysisEntry, String entryType, String localAisFile, IMemento cpu, int runnableId, int taskId) throws WorkflowException {
 		this.log.info("writeRequest: ");
 
