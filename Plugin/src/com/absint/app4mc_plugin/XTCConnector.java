@@ -66,8 +66,7 @@ public class XTCConnector extends WorkflowComponent {
 	private String startDateTime;
 	private String stopDateTime;
 	
-	private String mode = "Runnables"; // FIXME
-	
+		
 	@Override
 	protected void runInternal(Context ctx) throws WorkflowException {
 		this.log.info("runInternal: ");
@@ -111,6 +110,12 @@ public class XTCConnector extends WorkflowComponent {
 		System.out.println("runInternal: STOP: " + stopDateTime);
 	}
 
+	private String mode = "Runnables"; // FIXME
+		
+	public void setMode (String str) {
+		mode = str;
+	}
+	
 	private String taskPrefix;
 	private String runnablePrefix;
 	
@@ -133,6 +138,7 @@ public class XTCConnector extends WorkflowComponent {
 	private String aisLocation;
 	private String xmlReportLocation;
 	private String xmlResultLocation;
+	private String traceLocation;
 		
 	public void setXtcLocation (String location) {
 		xtcLocation = location;
@@ -152,6 +158,10 @@ public class XTCConnector extends WorkflowComponent {
 
 	public void setXmlResultLocation (String location) {
 		xmlResultLocation = location;
+	}
+	
+	public void setTraceLocation (String location) {
+		traceLocation = location;
 	}
 	
 	private Set<String> ignoredRunnables = new HashSet<String>();
@@ -179,6 +189,7 @@ public class XTCConnector extends WorkflowComponent {
 	private String xtcRequestType = "TimingProfiler";
 	private String xtcRequestOptionCpu = "tricore";
 	private String xtcRequestOptionTarget = "tc277";
+	private String xtcRequestOptionTraceFormat;
 	
 	public void setXtcRequestMode (String mode) {
 		xtcRequestMode = mode;
@@ -191,6 +202,10 @@ public class XTCConnector extends WorkflowComponent {
 	public void setXtcRequestTarget (String cpu, String target) {
 		xtcRequestOptionCpu = cpu;
 		xtcRequestOptionTarget = target;
+	}
+	
+	public void setXtcRequestTraceFormat (String traceFormat) {
+		xtcRequestOptionTraceFormat = traceFormat;
 	}
 	
 	private void writeXTC(String mode) throws WorkflowException, IOException {
@@ -332,6 +347,8 @@ public class XTCConnector extends WorkflowComponent {
 		writeXtcOptionElement(request, "a3:ais_file", localAisFile);
 		writeXtcOptionElement(request, "a3:xml_report_file", xmlReportLocation);
 		writeXtcOptionElement(request, "a3:xml_result_file", xmlResultLocation);
+		writeXtcOptionElement(request, "a3:traces", traceLocation);
+		writeXtcOptionElement(request, "a3:trace_format", xtcRequestOptionTraceFormat);
 	}
 		
 	private void writeXtcOptionElement (IMemento request, String key, String value) {
