@@ -44,7 +44,7 @@ public class XTCConnector extends WorkflowComponent {
 			throw new WorkflowException("The location of the XTC file must be set before running this workflow.");
 		}
 		
-		if (xtcLocation == null) {
+		if (elfLocation == null) {
 			throw new WorkflowException("The location of the binary executable (.elf file) must be set before running this workflow.");
 		}
 	
@@ -133,6 +133,10 @@ public class XTCConnector extends WorkflowComponent {
 		workingDirectory = location;
 	}
 	
+	private Double frequencyInMHz = 300.0; // FIXME
+	private Double cycleTimeValue = 1000.0/frequencyInMHz; // FIXME
+	private String cycleTimeUnit = "ns"; // FIXME		
+	
 	private String xtcLocation;
 	private String elfLocation;
 	private String aisLocation;
@@ -175,7 +179,7 @@ public class XTCConnector extends WorkflowComponent {
 		mappedRunnables.put(sourceRunnableName, targetRunnableName);
 	}
 	
-	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.5";
+	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.6";
 	
 	private String modelName;
 
@@ -417,7 +421,12 @@ public class XTCConnector extends WorkflowComponent {
 			String name = executable.getString("name");
 			IMemento response = executable.getChild("mode").getChild("response");
 			if (response != null) {
-				IMemento result = response.getChild("timing-profiler");
+				IMemento result = null;
+				if (xtcRequestType == "TimingProfiler") { // FIXME
+					result = response.getChild("timing-profiler");
+				} else if (xtcRequestType == "TimeWeaver") {
+					result = response.getChild("TimeWeaver");
+				}
 				String value = result.getString("value");
 				String unit = result.getString("unit");
 			
@@ -444,7 +453,12 @@ public class XTCConnector extends WorkflowComponent {
 						
 			String result = map.get(name);
 			if (result != null) {
-			   	updateRunnable(runnable, Long.parseLong(result));
+				if (xtcRequestType == "TimingProfiler") { // FIXME
+					updateRunnable(runnable, Long.parseLong(result));
+				} else if (xtcRequestType == "TimeWeaver") {
+					Double tmp = Double.parseDouble(result) / cycleTimeValue;
+					updateRunnable(runnable, tmp.longValue());
+				}
 			}
 		}
 	}
