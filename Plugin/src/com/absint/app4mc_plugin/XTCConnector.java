@@ -134,8 +134,10 @@ public class XTCConnector extends WorkflowComponent {
 	}
 	
 	private Double frequencyInMHz = 300.0; // FIXME
-	private Double cycleTimeValue = 1000.0/frequencyInMHz; // FIXME
-	private String cycleTimeUnit = "ns"; // FIXME		
+	
+	public void setFrequencyInMHz (Double frequency) {
+		frequencyInMHz = frequency;
+	}
 	
 	private String xtcLocation;
 	private String elfLocation;
@@ -179,7 +181,7 @@ public class XTCConnector extends WorkflowComponent {
 		mappedRunnables.put(sourceRunnableName, targetRunnableName);
 	}
 	
-	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.6";
+	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.7";
 	
 	private String modelName;
 
@@ -233,7 +235,7 @@ public class XTCConnector extends WorkflowComponent {
 		cpu.putString("file", elfLocation);
 
 		// do stuff either for Runnables or Tasks
-		if (mode == "Runnables") {
+		if (mode.equals("Runnables")) {
 			for (int i = 0; i < runnables.size(); i++) {
 	        	writeRequestForRunnable(runnables.get(i), cpu, i, null, 0);
 			}
@@ -412,7 +414,7 @@ public class XTCConnector extends WorkflowComponent {
 		XMLMemento xtc = XMLMemento.createReadRoot(new java.io.FileReader(xtcLocation));
 		
 		// create map for results
-		HashMap<String, String> map = new HashMap<String, String>();
+		HashMap<String, Long> map = new HashMap<String, Long>();
 		
 		// read timing information for each runnable from XTC
 		IMemento[] executables = xtc.getChild("common").getChild("CPU").getChildren();
@@ -422,17 +424,33 @@ public class XTCConnector extends WorkflowComponent {
 			IMemento response = executable.getChild("mode").getChild("response");
 			if (response != null) {
 				IMemento result = null;
-				if (xtcRequestType == "TimingProfiler") { // FIXME
+				if (xtcRequestType.equals("TimingProfiler")) { // FIXME
 					result = response.getChild("timing-profiler");
-				} else if (xtcRequestType == "TimeWeaver") {
+				} else if (xtcRequestType.equals("TimeWeaver")) {
 					result = response.getChild("TimeWeaver");
 				}
 				String value = result.getString("value");
 				String unit = result.getString("unit");
+				
+				Double cycles = Double.parseDouble(value);
+				if (unit.equals("ns")) {
+					Double cycleTimeInNS = 1000.0/frequencyInMHz;
+					cycles = cycles / cycleTimeInNS;
+				} else if (unit.equals("us")) {
+					Double cycleTimeInUS = 1.0/frequencyInMHz;
+					cycles = cycles / cycleTimeInUS;
+				} else if (unit.equals("ms")) {
+					Double cycleTimeInMS = 1.0/(1.0E3*frequencyInMHz);
+					cycles = cycles / cycleTimeInMS;
+				} else if (unit.equals("ss")) {
+					Double cycleTimeInS = 1.0/(1.0E6*frequencyInMHz);
+					cycles = cycles / cycleTimeInS;
+				}
+				cycles = Double.valueOf(Math.ceil(cycles));
+				
+				System.out.println("\t" + name + " " + value + " " + unit + " (" + cycles.toString() + " cycles)");
 			
-				System.out.println("\t" + name + " " + value + " " + unit);
-			
-				map.put(name, value);
+				map.put(name, cycles.longValue());
 			} else {
 				System.out.println("\t" + name + " no responce");
 			}
@@ -451,14 +469,9 @@ public class XTCConnector extends WorkflowComponent {
 			// rename some runnables
 			name = mappedRunnables.getOrDefault(name, name);
 						
-			String result = map.get(name);
+			Long result = map.get(name);
 			if (result != null) {
-				if (xtcRequestType == "TimingProfiler") { // FIXME
-					updateRunnable(runnable, Long.parseLong(result));
-				} else if (xtcRequestType == "TimeWeaver") {
-					Double tmp = Double.parseDouble(result) / cycleTimeValue;
-					updateRunnable(runnable, tmp.longValue());
-				}
+				updateRunnable(runnable, result);
 			}
 		}
 	}
