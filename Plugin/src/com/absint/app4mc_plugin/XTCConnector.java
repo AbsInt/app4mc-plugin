@@ -17,7 +17,7 @@ import org.eclipse.app4mc.amalthea.model.Runnable;
 import org.eclipse.app4mc.amalthea.model.RunnableItem;
 import org.eclipse.app4mc.amalthea.model.SWModel;
 import org.eclipse.app4mc.amalthea.model.Task;
-import org.eclipse.app4mc.amalthea.model.RunnableInstructions;
+import org.eclipse.app4mc.amalthea.model.ExecutionNeed;
 
 import org.eclipse.app4mc.amalthea.workflow.core.Context;
 import org.eclipse.app4mc.amalthea.workflow.core.WorkflowComponent;
