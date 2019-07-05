@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.app4mc.amalthea.model.util.*;
-import org.eclipse.app4mc.amalthea.model.InstructionsConstant;
 import org.eclipse.app4mc.amalthea.model.Runnable;
 import org.eclipse.app4mc.amalthea.model.RunnableItem;
 import org.eclipse.app4mc.amalthea.model.SWModel;
@@ -181,7 +180,7 @@ public class XTCConnector extends WorkflowComponent {
 		mappedRunnables.put(sourceRunnableName, targetRunnableName);
 	}
 	
-	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.7";
+	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.8";
 	
 	private String modelName;
 
@@ -381,17 +380,14 @@ public class XTCConnector extends WorkflowComponent {
 		// check whether some RunnableInstruction is already present
 		for (int j = 0; j < runnableItems.size(); j++) {
 			RunnableItem item = runnableItems.get(j);
-			if (item instanceof RunnableInstructions) {
+			if (item instanceof ExecutionNeed) {
 				System.out.println("Warning: There is already some timing information available for runnable '" + name + "'.");
 			}
 		}
 		
-		InstructionsConstant estimate = FactoryUtil.createInstructionConstant(max);
-		RunnableInstructions timingInfo = FactoryUtil.createRunnableInstructions(estimate);
-		
+		ExecutionNeed timingInfo = InstructionsUtil.createDefaultExecutionNeed(max);
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedBy", VENDOR_STRING);
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedAt", startDateTime);
-		
 		RuntimeUtil.addRuntimeToRunnable(runnable, timingInfo);
 				
 		/*
@@ -426,8 +422,8 @@ public class XTCConnector extends WorkflowComponent {
 				IMemento result = null;
 				if (xtcRequestType.equals("TimingProfiler")) { // FIXME
 					result = response.getChild("timing-profiler");
-				} else if (xtcRequestType.equals("TimeWeaver")) {
-					result = response.getChild("TimeWeaver");
+				} else {
+					result = response.getChild(xtcRequestType);
 				}
 				String value = result.getString("value");
 				String unit = result.getString("unit");
