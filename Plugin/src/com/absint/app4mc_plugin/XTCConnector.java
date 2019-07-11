@@ -132,8 +132,6 @@ public class XTCConnector extends WorkflowComponent {
 		
 		this.log.info("runInternal: START: " + startDateTime);
 		this.log.info("runInternal: STOP: " + stopDateTime);
-		System.out.println("runInternal: START: " + startDateTime);
-		System.out.println("runInternal: STOP: " + stopDateTime);
 	}
 
 	private String mode = "Runnables"; // FIXME
@@ -207,7 +205,7 @@ public class XTCConnector extends WorkflowComponent {
 		mappedRunnables.put(sourceRunnableName, targetRunnableName);
 	}
 	
-	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.7";
+	private static final String VENDOR_STRING = "AMALTHEA-XTC Connector v0.8.2";
 	
 	private String modelName;
 
@@ -272,15 +270,6 @@ public class XTCConnector extends WorkflowComponent {
 				writeTaskAisFile(task);
 				
 				writeRequestForTask(cpu, 0, task, i);
-				/*
-				Set<Runnable> runnablesOfTask = SoftwareUtil.getRunnableSet(task, null);
-							
-				// generate unique identifiers
-				int id = 0;
-				for (Runnable runnable : runnablesOfTask) {
-					writeRequestForRunnable(runnable, cpu, ++id, task, i);
-				}
-				*/
 			}
 		}
 
@@ -392,15 +381,13 @@ public class XTCConnector extends WorkflowComponent {
 	}
 	
 	private void updateRunnable(Runnable runnable, long max) {
-		this.log.info("writeRequest: ");
-		
 		String name = runnablePrefix + runnable.getName();
+
+		this.log.info("updateRunnable:" + name);
 
 		// ignore some runnables
 		if (ignoredRunnables.contains(name))
 			return;
-		
-		System.out.println("updateRunnable:" + name);
 		
 		EList<RunnableItem> runnableItems = runnable.getRunnableItems();
 		
@@ -408,7 +395,7 @@ public class XTCConnector extends WorkflowComponent {
 		for (int j = 0; j < runnableItems.size(); j++) {
 			RunnableItem item = runnableItems.get(j);
 			if (item instanceof RunnableInstructions) {
-				System.out.println("Warning: There is already some timing information available for runnable '" + name + "'.");
+				this.log.info("Warning: There is already some timing information available for runnable '" + name + "'.");
 			}
 		}
 		
@@ -419,22 +406,10 @@ public class XTCConnector extends WorkflowComponent {
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedAt", startDateTime);
 		
 		RuntimeUtil.addRuntimeToRunnable(runnable, timingInfo);
-				
-		/*
-		var deviation = def.createChild("deviation");
-		
-		var lowerBound = deviation.createChild("lowerBound");
-		lowerBound.putString("xsi:type", AMALTHEA_NAMESPACE + "LongObject");
-		lowerBound.putString("value", "0");
-		
-		var upperBound = deviation.createChild("upperBound");
-		upperBound.putString("xsi:type", AMALTHEA_NAMESPACE + "LongObject");
-		upperBound.putString("value", map.get(name));
-		*/
 	}
 	
 	private void retrieveTimingData() throws WorkbenchException, FileNotFoundException {
-		System.out.println("Retrieving timing data...");
+		this.log.info("Retrieving timing data...");
 
 		// read XTC file
 		XMLMemento xtc = XMLMemento.createReadRoot(new java.io.FileReader(xtcLocation));
@@ -474,11 +449,11 @@ public class XTCConnector extends WorkflowComponent {
 				}
 				cycles = Double.valueOf(Math.ceil(cycles));
 				
-				System.out.println("\t" + name + " " + value + " " + unit + " (" + cycles.toString() + " cycles)");
+				this.log.info("\t" + name + " " + value + " " + unit + " (" + cycles.toString() + " cycles)");
 			
 				map.put(name, cycles.longValue());
 			} else {
-				System.out.println("\t" + name + " no responce");
+				this.log.info("\t" + name + " no responce");
 			}
 		}
 			
@@ -510,8 +485,7 @@ public class XTCConnector extends WorkflowComponent {
 	}
 	
 	private void processXTC() throws IOException, InterruptedException {
-		
-		System.out.println("Calling TimingProfiler...");
+		this.log.info("Calling TimingProfiler...");
 	
 		Process p = java.lang.Runtime.getRuntime().exec(ALAUNCHER_COMMAND + " " + alauchnerOptions + " " + xtcLocation);
 		p.waitFor();
