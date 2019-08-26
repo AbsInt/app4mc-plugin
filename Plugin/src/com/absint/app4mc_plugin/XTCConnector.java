@@ -17,6 +17,7 @@ import org.eclipse.app4mc.amalthea.model.RunnableItem;
 import org.eclipse.app4mc.amalthea.model.SWModel;
 import org.eclipse.app4mc.amalthea.model.Task;
 import org.eclipse.app4mc.amalthea.model.ExecutionNeed;
+import org.eclipse.app4mc.amalthea.model.Ticks;
 
 import org.eclipse.app4mc.amalthea.workflow.core.Context;
 import org.eclipse.app4mc.amalthea.workflow.core.WorkflowComponent;
@@ -380,12 +381,12 @@ public class XTCConnector extends WorkflowComponent {
 		// check whether some RunnableInstruction is already present
 		for (int j = 0; j < runnableItems.size(); j++) {
 			RunnableItem item = runnableItems.get(j);
-			if (item instanceof ExecutionNeed) {
+			if (item instanceof Ticks) {
 				System.out.println("Warning: There is already some timing information available for runnable '" + name + "'.");
 			}
 		}
 		
-		ExecutionNeed timingInfo = InstructionsUtil.createDefaultExecutionNeed(max);
+		ExecutionNeed timingInfo = InstructionsUtil.createExecutionNeedConstant(max);
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedBy", VENDOR_STRING);
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedAt", startDateTime);
 		RuntimeUtil.addRuntimeToRunnable(runnable, timingInfo);
