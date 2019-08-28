@@ -16,7 +16,8 @@ import org.eclipse.app4mc.amalthea.model.Runnable;
 import org.eclipse.app4mc.amalthea.model.RunnableItem;
 import org.eclipse.app4mc.amalthea.model.SWModel;
 import org.eclipse.app4mc.amalthea.model.Task;
-import org.eclipse.app4mc.amalthea.model.ExecutionNeed;
+import org.eclipse.app4mc.amalthea.model.AmaltheaFactory;
+import org.eclipse.app4mc.amalthea.model.DiscreteValueConstant;
 import org.eclipse.app4mc.amalthea.model.Ticks;
 
 import org.eclipse.app4mc.amalthea.workflow.core.Context;
@@ -181,7 +182,7 @@ public class XTCConnector extends WorkflowComponent {
 		mappedRunnables.put(sourceRunnableName, targetRunnableName);
 	}
 	
-	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.8";
+	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.9.3";
 	
 	private String modelName;
 
@@ -365,6 +366,15 @@ public class XTCConnector extends WorkflowComponent {
 		}
 	}
 	
+	private Ticks createTicks(long value) {
+		Ticks ticks = AmaltheaFactory.eINSTANCE.createTicks();
+		DiscreteValueConstant c = AmaltheaFactory.eINSTANCE.createDiscreteValueConstant();
+		c.setValue(value);
+		ticks.setDefault(c);
+		
+		return ticks;
+	}
+	
 	private void updateRunnable(Runnable runnable, long max) {
 		this.log.info("writeRequest: ");
 		
@@ -386,7 +396,7 @@ public class XTCConnector extends WorkflowComponent {
 			}
 		}
 		
-		ExecutionNeed timingInfo = InstructionsUtil.createExecutionNeedConstant(max);
+		Ticks timingInfo = createTicks(max);
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedBy", VENDOR_STRING);
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedAt", startDateTime);
 		RuntimeUtil.addRuntimeToRunnable(runnable, timingInfo);
