@@ -223,7 +223,12 @@ public class XTCConnector extends WorkflowComponent {
 		xtcRequestOptionTraceFormat = traceFormat;
 	}
 	
-	private void writeXTC(String mode) throws WorkbenchException, FileNotFoundException, WorkflowException, IOException {
+	private boolean fileExists(String path) {
+		File f = new File(path.trim());
+		return f.exists() && f.isFile();
+	}
+	
+	private void writeXTC(String mode) throws WorkbenchException, WorkflowException, IOException {
 		this.log.info("Writing XTC file...");
 
 		// create <xtc> tag
@@ -267,16 +272,18 @@ public class XTCConnector extends WorkflowComponent {
 			}
 		}
 
-		if (xtcRequestMode != "configuration") {
+		if (xtcRequestMode != "configuration" && fileExists(xtcLocation)) {
 			// read old XTC file
 			XMLMemento oldXtc = XMLMemento.createReadRoot(new java.io.FileReader(xtcLocation));
 
 			// read old cookie
 			IMemento oldCookie = oldXtc.getChild("cookie");
 
-			// copy cookie
-			IMemento cookie = xtc.createChild("cookie");
-			cookie.putMemento(oldCookie);
+			// copy cookie if it exists
+			if (oldCookie != null) {
+				IMemento cookie = xtc.createChild("cookie");
+				cookie.putMemento(oldCookie);
+			}
 		}
 		
 		// save file to disk
