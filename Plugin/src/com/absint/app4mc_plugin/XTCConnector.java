@@ -46,11 +46,19 @@ public class XTCConnector extends WorkflowComponent {
 		}
 		
 		if (elfLocation == null) {
-			throw new WorkflowException("The location of the binary executable (.elf file) must be set before running this workflow.");
+			if (xtcRequestMode == "configuration") {
+				elfLocation = "";
+			} else {
+				throw new WorkflowException("The location of the binary executable (.elf file) must be set before running this workflow.");
+			}
 		}
 	
 		if (xmlResultLocation == null) {
-			throw new WorkflowException("The location of the XML result file must be set before running this workflow.");
+			if (xtcRequestMode == "configuration") {
+				xmlResultLocation = "";
+			} else {
+				throw new WorkflowException("The location of the XML result file must be set before running this workflow.");
+			}
 		}
 			
 		if (taskPrefix == null) {
@@ -215,7 +223,7 @@ public class XTCConnector extends WorkflowComponent {
 		xtcRequestOptionTraceFormat = traceFormat;
 	}
 	
-	private void writeXTC(String mode) throws WorkflowException, IOException {
+	private void writeXTC(String mode) throws WorkbenchException, FileNotFoundException, WorkflowException, IOException {
 		this.log.info("Writing XTC file...");
 
 		// create <xtc> tag
@@ -259,6 +267,19 @@ public class XTCConnector extends WorkflowComponent {
 			}
 		}
 
+		if (xtcRequestMode != "configuration") {
+			// read old XTC file
+			XMLMemento oldXtc = XMLMemento.createReadRoot(new java.io.FileReader(xtcLocation));
+
+			// read old cookie
+			IMemento oldCookie = oldXtc.getChild("cookie");
+
+			// copy cookie
+			IMemento cookie = xtc.createChild("cookie");
+			cookie.putMemento(oldCookie);
+		}
+		
+		// save file to disk
 		xtc.save(new java.io.FileWriter(xtcLocation));
 
 		this.log.info("Finished writing '" + xtcLocation + "'.");
