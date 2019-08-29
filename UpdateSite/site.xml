@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/AMALTHEA_XTC_Connector_1.0.0.201902061249.jar" id="AMALTHEA_XTC_Connector" version="1.0.0.201902061249"/>
+   <feature url="features/AMALTHEA_XTC_Connector_0.9.3.201908291518.jar" id="AMALTHEA_XTC_Connector" version="0.9.3.201908291518"/>
 </site>

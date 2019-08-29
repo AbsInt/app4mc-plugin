@@ -6,7 +6,7 @@ Bundle-Version: 0.9.3.qualifier
 Bundle-Activator: com.absint.app4mc_plugin.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.eclipse.app4mc.amalthea.workflow.core;bundle-version="0.9.1"
+ org.eclipse.app4mc.amalthea.workflow.core;bundle-version="0.9.3"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: com.absint.app4mc_plugin
