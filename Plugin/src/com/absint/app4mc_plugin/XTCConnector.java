@@ -38,12 +38,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.app4mc.amalthea.model.util.*;
-import org.eclipse.app4mc.amalthea.model.InstructionsConstant;
 import org.eclipse.app4mc.amalthea.model.Runnable;
 import org.eclipse.app4mc.amalthea.model.RunnableItem;
 import org.eclipse.app4mc.amalthea.model.SWModel;
 import org.eclipse.app4mc.amalthea.model.Task;
-import org.eclipse.app4mc.amalthea.model.RunnableInstructions;
+import org.eclipse.app4mc.amalthea.model.AmaltheaFactory;
+import org.eclipse.app4mc.amalthea.model.DiscreteValueConstant;
+import org.eclipse.app4mc.amalthea.model.Ticks;
 
 import org.eclipse.app4mc.amalthea.workflow.core.Context;
 import org.eclipse.app4mc.amalthea.workflow.core.WorkflowComponent;
@@ -71,11 +72,19 @@ public class XTCConnector extends WorkflowComponent {
 		}
 		
 		if (elfLocation == null) {
-			throw new WorkflowException("The location of the binary executable (.elf file) must be set before running this workflow.");
+			if (xtcRequestMode == "configuration") {
+				elfLocation = "";
+			} else {
+				throw new WorkflowException("The location of the binary executable (.elf file) must be set before running this workflow.");
+			}
 		}
 	
 		if (xmlResultLocation == null) {
-			throw new WorkflowException("The location of the XML result file must be set before running this workflow.");
+			if (xtcRequestMode == "configuration") {
+				xmlResultLocation = "";
+			} else {
+				throw new WorkflowException("The location of the XML result file must be set before running this workflow.");
+			}
 		}
 			
 		if (taskPrefix == null) {
@@ -205,7 +214,7 @@ public class XTCConnector extends WorkflowComponent {
 		mappedRunnables.put(sourceRunnableName, targetRunnableName);
 	}
 	
-	private static final String VENDOR_STRING = "AMALTHEA-XTC Connector v0.8.2";
+	private static final String VENDOR_STRING = "AMALTHEA XTC Connector v0.9.3";
 	
 	private String modelName;
 
@@ -238,7 +247,12 @@ public class XTCConnector extends WorkflowComponent {
 		xtcRequestOptionTraceFormat = traceFormat;
 	}
 	
-	private void writeXTC(String mode) throws WorkflowException, IOException {
+	private boolean fileExists(String path) {
+		File f = new File(path.trim());
+		return f.exists() && f.isFile();
+	}
+	
+	private void writeXTC(String mode) throws WorkbenchException, WorkflowException, IOException {
 		this.log.info("Writing XTC file...");
 
 		// create <xtc> tag
@@ -273,6 +287,21 @@ public class XTCConnector extends WorkflowComponent {
 			}
 		}
 
+		if (xtcRequestMode != "configuration" && fileExists(xtcLocation)) {
+			// read old XTC file
+			XMLMemento oldXtc = XMLMemento.createReadRoot(new java.io.FileReader(xtcLocation));
+
+			// read old cookie
+			IMemento oldCookie = oldXtc.getChild("cookie");
+
+			// copy cookie if it exists
+			if (oldCookie != null) {
+				IMemento cookie = xtc.createChild("cookie");
+				cookie.putMemento(oldCookie);
+			}
+		}
+		
+		// save file to disk
 		xtc.save(new java.io.FileWriter(xtcLocation));
 
 		this.log.info("Finished writing '" + xtcLocation + "'.");
@@ -380,6 +409,15 @@ public class XTCConnector extends WorkflowComponent {
 		}
 	}
 	
+	private Ticks createTicks(long value) {
+		Ticks ticks = AmaltheaFactory.eINSTANCE.createTicks();
+		DiscreteValueConstant c = AmaltheaFactory.eINSTANCE.createDiscreteValueConstant();
+		c.setValue(value);
+		ticks.setDefault(c);
+		
+		return ticks;
+	}
+	
 	private void updateRunnable(Runnable runnable, long max) {
 		String name = runnablePrefix + runnable.getName();
 
@@ -394,17 +432,14 @@ public class XTCConnector extends WorkflowComponent {
 		// check whether some RunnableInstruction is already present
 		for (int j = 0; j < runnableItems.size(); j++) {
 			RunnableItem item = runnableItems.get(j);
-			if (item instanceof RunnableInstructions) {
-				this.log.info("Warning: There is already some timing information available for runnable '" + name + "'.");
+			if (item instanceof Ticks) {
+				System.out.println("Warning: There is already some timing information available for runnable '" + name + "'.");
 			}
 		}
 		
-		InstructionsConstant estimate = FactoryUtil.createInstructionConstant(max);
-		RunnableInstructions timingInfo = FactoryUtil.createRunnableInstructions(estimate);
-		
+		Ticks timingInfo = createTicks(max);
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedBy", VENDOR_STRING);
 		CustomPropertyUtil.customPut(timingInfo, "GeneratedAt", startDateTime);
-		
 		RuntimeUtil.addRuntimeToRunnable(runnable, timingInfo);
 	}
 	
@@ -427,8 +462,8 @@ public class XTCConnector extends WorkflowComponent {
 				IMemento result = null;
 				if (xtcRequestType.equals("TimingProfiler")) { // FIXME
 					result = response.getChild("timing-profiler");
-				} else if (xtcRequestType.equals("TimeWeaver")) {
-					result = response.getChild("TimeWeaver");
+				} else {
+					result = response.getChild(xtcRequestType);
 				}
 				String value = result.getString("value");
 				String unit = result.getString("unit");

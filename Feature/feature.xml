@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="AMALTHEA_XTC_Connector"
-      label="AMALTHEA-XTC Connector"
-      version="0.8.2.qualifier">
+      label="AMALTHEA_XTC_Connector"
+      version="0.9.3.qualifier">
 
    <description>
       This feature allows to automatically generate XTC files from
@@ -10,13 +10,14 @@ AMALTHEA models.
    </description>
 
    <copyright>
-      Copyright (c) 2018 AbsInt Angewandte Informatik GmbH
+      Copyright (c) 2018-2019 AbsInt Angewandte Informatik GmbH and
+others.
    </copyright>
 
    <license url="">
       The MIT License (MIT)
 
-Copyright (c) 2018 AbsInt Angewandte Informatik GmbH
+Copyright (c) 2018-2019 AbsInt Angewandte Informatik GmbH
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the &quot;Software&quot;), to deal
